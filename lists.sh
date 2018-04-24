@@ -97,6 +97,51 @@ function list_len() {
 }
 
 #
+# Returns a transformed list
+# by applying the user provided
+# map function on every element
+# in the list
+function list_map() {
+
+}
+
+#
+# Reduce the list l to r
+#
+function foldl() {
+
+}
+
+#
+# Reduce the list r to l
+#
+function foldr() {
+
+}
+
+#
+# Zip two lists and turn them
+# into an associative array
+# since BASH does not support
+# tuples 
+# first=(Name Age)
+# second(Ranjit 30)
+# result[Name]=Ranjit
+# result[Age]=30
+#
+function zip() {
+
+}
+
+function min() {
+
+}
+
+function max() {
+
+}
+
+#
 # test list values, list keys,
 # list len
 #
