@@ -58,67 +58,132 @@ function list_droplast() {
 	echo ${result_list[@]}
 }
 
+function list_dropwhile() {
+	predicate=$1
+	shift
+	user_list=($@)
+	result_list=()
+	for item in "${user_list[@]}"; do
+		if $($predicate $item); then
+			result_list+=($item)
+		fi
+	done
+	echo ${result_list[@]}
+}
+
+function list_duplicate() {
+	n=$1
+	value=$2
+	result_list=()
+	while (( n-- > 0 )); do
+		result_list+=($value)
+	done
+	echo ${result_list[@]}
+}
+
+function list_values() {
+	user_list=($@)
+	echo ${user_list[@]}
+}
+
+function list_keys() {
+	user_list=($@)
+	echo ${!user_list[@]}
+}
+
+function list_len() {
+	user_list=($@)
+	echo ${#user_list[@]}
+}
+
+#
+# test list values, list keys,
+# list len
+#
+list=(1 2 3 4)
+list_values ${list[@]}
+list_keys ${list[@]}
+list_len ${list[@]}
+
+#
+# test list duplicate
+#
+value="##"
+result=$(list_duplicate 5 $value)
+echo "list duplicate result ${result[@]}"
+
+#
+# test list_dropwhile()
+#
+first=(1 2 3 1 1 1)
+function predicate() {
+	if [[ $1 == 1 ]]; then
+		echo false
+	else
+		echo true
+	fi	
+}
+result=$(list_dropwhile predicate "${first[@]}")
+echo "list_dropwhile result ${result[@]}"
 
 #
 # test list_droplast()
 #
-echo "hi"
 first=(1 2 3)
-# doesn't work when called inside $()
-list_droplast ${first[@]}
+result=$(list_droplast ${first[@]})
+echo "list_droplast result ${result[@]}"
 
-# #
-# # test list_dropfirst()
-# #
-# first=(1 2 3)
-# second=$(list_dropfirst ${first[@]})
+#
+# test list_dropfirst()
+#
+first=(1 2 3)
+second=$(list_dropfirst ${first[@]})
+echo "list dropfirst result ${second[@]}"
 
-# #
-# # test list_append()
-# #
-# first=(1 2 3)
-# second=(4 5 6)
-# third=$(list_append ${first[@]} ${second[@]})
-
-
-# #
-# # test list_any()
-# #
-# first=(1 2 3)
-# second=(4 5 6)
-# third=$(list_append ${first[@]} ${second[@]})
-# echo "${third[@]}"
+#
+# test list_append()
+#
+first=(1 2 3)
+second=(4 5 6)
+third=$(list_append ${first[@]} ${second[@]})
 
 
-# #
-# # test list_any()
-# #
+#
+# test list_any()
+#
+first=(1 2 3)
+second=(4 5 6)
+third=$(list_append ${first[@]} ${second[@]})
+echo "${third[@]}"
 
-# # use list_any
-# list=(1 2 3)
-# function predicate() {
-# 	if [[ $1 == 1 ]]; then
-# 		echo true
-# 	else
-# 		echo false
-# 	fi	
-# }
+#
+# test list_any()
+#
+# use list_anyei
+list=(1 2 3)
+function predicate() {
+	if [[ $1 == 1 ]]; then
+		echo true
+	else
+		echo false
+	fi	
+}
 
-# result=$(list_any predicate "${list[@]}")
-# if $result; then
-# 	echo "predictate is true for some element in the list"
-# else	
-# 	echo "predicate test failed"
-# fi
+result=$(list_any predicate "${list[@]}")
+if $result; then
+	echo "predictate is true for some element in the list"
+else	
+	echo "predicate test failed"
+fi
 
 
-# #
-# # test list_all()
-# #
-# list=(1 1 1)
-# result=$(list_all predicate "${list[@]}")
-# if $result; then
-# 	echo "predictate is true for some element in the list"
-# else	
-# 	echo "predicate test failed"
-# fi
+#
+# test list_all()
+#
+list=(1 1 1)
+result=$(list_all predicate "${list[@]}")
+if $result; then
+	echo "predictate is true for some element in the list"
+else	
+	echo "predicate test failed"
+fi
