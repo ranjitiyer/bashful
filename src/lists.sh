@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 
 # List functions
 
@@ -102,22 +102,62 @@ function list_len() {
 # map function on every element
 # in the list
 function list_map() {
-
+	local map=$1
+	local user_list=($@)
+	local result_list=()
+	for item in ${user_list[@]}; do
+		result_list+=($($map $item))
+	done
+	echo ${result_list[@]}
 }
 
 #
 # Reduce the list l to r
 #
-function foldl() {
-
+function list_foldl() {
+	local user_fn=$1
+	shift
+	local user_list=($@)
+	local accumulator=0
+	for item in ${user_list[@]}; do
+		accumulator=$($user_fn $item $accumulator)
+	done
+	echo $accumulator
 }
 
 #
 # Reduce the list r to l
 #
-function foldr() {
-
+function list_foldr() {
+	local user_fn=$1
+	shift
+	local user_list=($@)
+	local accumulator=0	
+	for (( i=${#user_list[@]}-1; i>=0; i-- )); do
+		accumulator=$($user_fn ${user_list[i]} $accumulator)
+	done	
+	echo $accumulator
 }
+
+# function list_len() {
+# 	declare -n _array=$1
+# 	echo ${#_array[@]}
+# }
+
+function list_drop_first_n() {
+	declare -n list=$1
+	declare -i n=$2
+
+	# todo
+}
+
+function list_drop_last_n() {
+	declare -n list=$1
+	declare -i n=$2
+
+	# todo	
+}
+
 
 #
 # Zip two lists and turn them
@@ -129,17 +169,74 @@ function foldr() {
 # result[Name]=Ranjit
 # result[Age]=30
 #
-function zip() {
+function list_zip() {
+  declare -n _array_one=$1
+  declare -n _array_two=$2
 
+  declare -A -g zip_result
+
+  declare -i _array_one_size=${#_array_one[@]}
+  declare -i _array_two_size=${#_array_two[@]}
+
+  local min_size=0
+
+  echo "array 1 size " $_array_one_size
+  echo "array 2 size " $_array_two_size
+
+  if [[ $_array_one_size > $_array_two_size ]]; then
+	list_drop_last_n _array_one $(( $_array_one_size-$_array_two_size ))
+	min_size=$_array_two_size
+  else 
+	list_drop_last_n _array_two $(( $_array_two_size-$_array_one_size ))
+	min_size=$_array_one_size
+  fi
+
+  echo "min size $min_size"
+
+  for (( i=0;i<$min_size; i++ )); do
+  	zip_result[${_array_one[i]}]=${_array_two[i]}
+  done
+
+  echo ${!zip_result[@]}
 }
 
-function min() {
+array_one=( "name" "age" )
+array_two=( "ranjit" "30" "irvine" )
+echo "calling zip"
+list_zip array_one array_two
 
+#
+# test foldl
+# list len
+#
+
+function sum() {
+	local elem=$1
+	local accumulator=$2
+	echo $(( $accumulator+$elem ))
+}
+list=(1 2 3 4)
+result=$(list_foldl sum ${list[@]})	
+echo "result of foldl $result"
+
+#
+# test foldr
+#
+list=(1 2 3 4)
+result=$(list_foldr sum ${list[@]})	
+echo "result of foldr $result"
+
+#
+# test list values, list keys,
+# list len
+#
+list=(1 2 3 4)
+function times2() {
+	echo $(($1 * 2))
 }
 
-function max() {
-
-}
+result=$(list_map times2 ${list[@]})
+echo "${result[@]}"
 
 #
 # test list values, list keys,
