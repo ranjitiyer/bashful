@@ -108,8 +108,34 @@ function string_starts_with() {
 	fi
 }
 
+
+
 function string_ends_with() {
-	echo ""
+	local string=$1
+	local substring=$2
+
+	local orig_first_len=$(string_len "$string")
+	local orig_second_len=$(string_len "$substring")
+
+	if [[ $orig_second_len -gt $orig_first_len ]]; then
+		echo "substring is longer than the source string"
+		return 1
+	fi
+
+	# drop the suffix
+	string=${string%$substring}
+
+	# get the new len of first
+	local new_first_len=$(string_len "$string")
+
+	# if new len of first is what's left after 
+	# dropping substring then we have a match
+	if [[ $new_first_len -eq $(( $orig_first_len - $orig_second_len  )) ]]; then
+		echo "$1 ends with $2"
+		return 0
+	else
+		return 1
+	fi
 }
 
 function string_contains() {
@@ -127,3 +153,13 @@ if $(string_starts_with "$first" "$second") ; then
 else	
 	echo "no"
 fi
+
+# startswith
+first="hello world"
+second="world"
+if [[ $(string_ends_with "$first" "$second") ]]; then
+	echo "yes"
+else
+	echo "no"
+fi
+
