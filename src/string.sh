@@ -59,10 +59,6 @@ function string_to_lower() {
 	echo $_upper
 }
 
-function string_indexof() {
-
-	echo ""
-}
 
 function string_last_indexof() {
 	echo ""
@@ -76,90 +72,162 @@ function string_substring() {
 	echo ""
 }
 
-function string_trim() {
-	echo ""
-}
-
-function string_replace() {
-	echo ""
-}
-
 function string_reverse() {
 	echo ""
 }
 
+# Improvment would be to 
+# drop prefix and check len of first
 function string_starts_with() {
 	local string=$1
 	local substring=$2
-
-	local str_len=$(string_len $string)
-	local sstr_len=$(string_len $substring) 
-
-	if [[ $str_len -lt $sstr_len ]]; then
-		return 1
-	fi
-
-	# truncate first and compare with second
-	string=${string:0:$str_len}
-	if [[ $string == $substring ]]; then
+	if [[ "$string" =~ ^"$substring" ]]; then
 		return 0
-	else
+	else	
 		return 1
 	fi
 }
-
-
 
 function string_ends_with() {
 	local string=$1
 	local substring=$2
-
-	local orig_first_len=$(string_len "$string")
-	local orig_second_len=$(string_len "$substring")
-
-	if [[ $orig_second_len -gt $orig_first_len ]]; then
-		echo "substring is longer than the source string"
-		return 1
-	fi
-
-	# drop the suffix
-	string=${string%$substring}
-
-	# get the new len of first
-	local new_first_len=$(string_len "$string")
-
-	# if new len of first is what's left after 
-	# dropping substring then we have a match
-	if [[ $new_first_len -eq $(( $orig_first_len - $orig_second_len  )) ]]; then
-		echo "$1 ends with $2"
+	if [[ $string =~ $substring$ ]]; then
 		return 0
-	else
+	else	
 		return 1
 	fi
 }
 
+# first="hello world"
+# second="llo w"
 function string_contains() {
-	echo ""
+	echo "string contains called"
+	local first=$1
+	local second=$2
+
+	local first_len=$(string_len "$first")
+	for (( i = 0; i < $first_len; i++ )); do
+		first=${first:$i}
+		first_len=$(string_len "$first")
+
+		# drop prefix
+		local first_prefix=${first#$second}
+
+		# if dropping modifies the len of first
+		# then we have a match
+		local first_len_new=$(string_len "$first_prefix")
+		if [[ $first_len -gt $first_len_new ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+# global replace
+function string_replace() {
+	local string=$1
+	local search_pattern=$2
+	local replace_string=$3
+	echo "echo $string | sed "s/$search_pattern/$replace_string/g""
+	echo $(echo $string | sed "s/$search_pattern/$replace_string/g")
+}
+
+
+function string_trim {
+	local string=$1
+	string=$(echo $string | sed 's/{ *$;^ *}//')
+	echo "$string"
+}
+
+function string_indexof() {
+	local first=$1
+	local second=$2
+	local orig_len=$(string_len "$first")
+	for (( i = 0; i < $orig_len; i++ )); do
+		local temp=${first:$i}
+		if $(string_starts_with "$temp" "$second"); then
+			echo $i
+			return 0
+		fi
+	done
+
+	echo -1
+	return 1
 }
 
 
 ############### Testing ###############
 
 # startswith
-first="hello world"
-second="hello"
-if $(string_starts_with "$first" "$second") ; then
-	echo "yes"
-else	
-	echo "no"
-fi
+string_starts_with "hello world" "hello"
+echo $?
+string_starts_with "hello world" "world"
+echo $?
+string_starts_with "lo world" "world"
+echo $?
 
-# startswith
-first="hello world"
-second="world"
-if [[ $(string_ends_with "$first" "$second") ]]; then
-	echo "yes"
-else
-	echo "no"
-fi
+string_ends_with "hello world" "world"
+echo $?
+string_ends_with "hello world" "hello"
+echo $?
+
+echo $(string_indexof "hello world" "world")
+echo $(string_indexof "hello world" "hide")
+
+# # indexof (-1)
+# first="hello world"
+# second="llo"
+# echo $(string_indexof "$first" "$second")
+
+# # indexof (-1)
+# first="hello world"
+# second="world"
+# echo $(string_indexof "$first" "$second")
+
+# # trim
+# first="    hello world    "
+# echo "string len before trim is $(string_len "$first")"
+# first=$(string_trim "$first")
+# echo "string len after trim is $(string_len "$first")"
+
+
+# # replace
+# first=" hello world"
+# echo "$first"
+# first=$(string_replace "$first" " $" "world")
+# echo "$first"
+
+# # contains
+# first="hello world"
+# second="hello"
+# if [[ $(string_contains "$first" "$second") ]]; then
+# 	echo \"$first\" contains \"$second\"
+# else
+# 	echo \"$first\" does not contain \"$second\"
+# fi
+
+# if $(string_contains "$first" "$second") ; then
+# 	echo "yes"
+# else	
+# 	echo "no"
+# fi
+
+
+# # startswith
+# first="hello world"
+# second="hello"
+# if $(string_starts_with "$first" "$second") ; then
+# 	echo "yes"
+# else	
+# 	echo "no"
+# fi
+
+# # startswith
+# first="hello world"
+# second="world"
+# if [[ $(string_ends_with "$first" "$second") ]]; then
+# 	echo "yes"
+# else
+# 	echo "no"
+# fi
 
