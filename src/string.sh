@@ -69,7 +69,13 @@ function string_split() {
 }
 
 function string_substring() {
-	echo ""
+	local first=$1
+	local start_index=$2
+	local len=$3
+	if [[ -z "$len" ]]; then
+		len=$(string_len "$first")
+	fi
+	echo ${first:start_index:len}
 }
 
 function string_reverse() {
@@ -157,6 +163,8 @@ function string_indexof() {
 
 
 ############### Testing ###############
+
+string_substring "hello world" $(string_indexof "hello world" "world")
 
 # startswith
 string_starts_with "hello world" "hello"
