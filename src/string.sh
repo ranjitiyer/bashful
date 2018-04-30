@@ -1,49 +1,5 @@
 #!/usr/local/bin/bash
 
-# Expansion
-
-# STR="/path/to/foo.cpp"
-# echo ${STR%.cpp}    # /path/to/foo
-# echo ${STR%.cpp}.o  # /path/to/foo.o
-
-# echo ${STR##*.}     # cpp (extension)
-# echo ${STR##*/}     # foo.cpp (basepath)
-
-# echo ${STR#*/}      # path/to/foo.cpp
-# echo ${STR##*/}     # foo.cpp
-
-# echo ${STR/foo/bar} # /path/to/bar.cpp
-# STR="Hello world"
-# echo ${STR:6:5}   # "world"
-# echo ${STR:-5:5}  # "world"
-# SRC="/path/to/foo.cpp"
-# BASE=${STR##*/}   #=> "foo.cpp" (basepath)
-# DIR=${SRC%$BASE}  #=> "/path/to" (dirpath)
-
-# Slicing
-
-# name="John"
-# echo ${name}
-# echo ${name/J/j}    #=> "john" (substitution)
-# echo ${name:0:2}    #=> "jo" (slicing)
-# echo ${name::2}     #=> "jo" (slicing)
-# echo ${name::-1}    #=> "joh" (slicing)
-# echo ${food:-Cake}  #=> $food or "Cake"
-
-
-# Substitution
-
-# ${FOO%suffix}	Remove suffix
-# ${FOO#prefix}	Remove prefix
-# ${FOO%%suffix}	Remove long suffix
-# ${FOO##prefix}	Remove long prefix
-# ${FOO/from/to}	Replace first match
-# ${FOO//from/to}	Replace all
-# ${FOO/%from/to}	Replace suffix
-# ${FOO/#from/to}	Replace prefix
-
-# ${FOO:0:3}
-
 function string_len(){
 	local str=$1
 	echo ${#str}
@@ -59,13 +15,61 @@ function string_to_lower() {
 	echo $_upper
 }
 
+# global replace
+function string_replace() {
+	local string=$1
+	local search_pattern=$2
+	local replace_string=$3
+	echo "echo $string | sed "s/$search_pattern/$replace_string/g""
+	echo $(echo $string | sed "s/$search_pattern/$replace_string/g")
+}
+
+# Does not handle spaces in the source string
+function string_reverse() {
+	local string=$1
+	local reversed=()
+	echo "$string"
+	local len=$(string_len "$string")
+
+	for (( i = $(( len -1 )); i >= 0; i-- )); do
+		reversed+=(${string:$i:1})
+	done
+	echo $(echo ${reversed[@]} | sed 's/ //g')
+}
 
 function string_last_indexof() {
-	echo ""
+	echo "TODO"
+}
+
+function string_char_at() {
+	local string=$1
+	local index=$2
+
+	if [[ -z "$index" ]]; then
+		echo "$string"
+		return 1
+	elif [[ $index -ge $(string_len "$string") ]]; then
+		echo "index out of bounds"
+		return 1
+	fi
+
+	for (( i = 0; i < $(string_len "$string"); i++ )); do
+		if [[ $i -eq $index ]]; then
+			echo ${string:$i:1}
+			return 0
+		fi
+	done
 }
 
 function string_split() {
-	echo ""
+	local string=$1
+	local fs=$2
+	if [[ -z "$fs" ]]; then
+		fs=" "
+	fi
+
+	local array=($(echo "$string" | awk -v fs="$fs" '{split($0,a,fs); for (i=1; i<=length(a); i++) print a[i]}'))
+	echo ${array[@]}
 }
 
 function string_substring() {
@@ -76,10 +80,6 @@ function string_substring() {
 		len=$(string_len "$first")
 	fi
 	echo ${first:start_index:len}
-}
-
-function string_reverse() {
-	echo ""
 }
 
 # Improvment would be to 
@@ -129,15 +129,6 @@ function string_contains() {
 	return 1
 }
 
-# global replace
-function string_replace() {
-	local string=$1
-	local search_pattern=$2
-	local replace_string=$3
-	echo "echo $string | sed "s/$search_pattern/$replace_string/g""
-	echo $(echo $string | sed "s/$search_pattern/$replace_string/g")
-}
-
 
 function string_trim {
 	local string=$1
@@ -164,6 +155,14 @@ function string_indexof() {
 
 ############### Testing ###############
 
+string_split "path/to/folder" "/"
+
+string_reverse "hello world"
+
+string_char_at "hello world"
+string_char_at "hello world" 0
+string_char_at "hello world" 24
+
 string_substring "hello world" $(string_indexof "hello world" "world")
 
 # startswith
@@ -182,60 +181,53 @@ echo $?
 echo $(string_indexof "hello world" "world")
 echo $(string_indexof "hello world" "hide")
 
-# # indexof (-1)
-# first="hello world"
-# second="llo"
-# echo $(string_indexof "$first" "$second")
+# indexof (-1)
+first="hello world"
+second="llo"
+echo $(string_indexof "$first" "$second")
 
-# # indexof (-1)
-# first="hello world"
-# second="world"
-# echo $(string_indexof "$first" "$second")
+# indexof (-1)
+first="hello world"
+second="world"
+echo $(string_indexof "$first" "$second")
 
-# # trim
-# first="    hello world    "
-# echo "string len before trim is $(string_len "$first")"
-# first=$(string_trim "$first")
-# echo "string len after trim is $(string_len "$first")"
-
-
-# # replace
-# first=" hello world"
-# echo "$first"
-# first=$(string_replace "$first" " $" "world")
-# echo "$first"
-
-# # contains
-# first="hello world"
-# second="hello"
-# if [[ $(string_contains "$first" "$second") ]]; then
-# 	echo \"$first\" contains \"$second\"
-# else
-# 	echo \"$first\" does not contain \"$second\"
-# fi
-
-# if $(string_contains "$first" "$second") ; then
-# 	echo "yes"
-# else	
-# 	echo "no"
-# fi
+# trim
+first="    hello world    "
+echo "string len before trim is $(string_len "$first")"
+first=$(string_trim "$first")
+echo "string len after trim is $(string_len "$first")"
 
 
-# # startswith
-# first="hello world"
-# second="hello"
-# if $(string_starts_with "$first" "$second") ; then
-# 	echo "yes"
-# else	
-# 	echo "no"
-# fi
+# replace
+first=" hello world"
+echo "$first"
+first=$(string_replace "$first" " $" "world")
+echo "$first"
 
-# # startswith
-# first="hello world"
-# second="world"
-# if [[ $(string_ends_with "$first" "$second") ]]; then
-# 	echo "yes"
-# else
-# 	echo "no"
-# fi
+# contains
+first="hello world"
+second="hello"
+if [[ $(string_contains "$first" "$second") ]]; then
+	echo \"$first\" contains \"$second\"
+else
+	echo \"$first\" does not contain \"$second\"
+fi
+
+# startswith
+first="hello world"
+second="hello"
+if $(string_starts_with "$first" "$second") ; then
+	echo "yes"
+else	
+	echo "no"
+fi
+
+# startswith
+first="hello world"
+second="world"
+if [[ $(string_ends_with "$first" "$second") ]]; then
+	echo "yes"
+else
+	echo "no"
+fi
 
